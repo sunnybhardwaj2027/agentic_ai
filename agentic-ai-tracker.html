@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agentic AI Plan & Tracker</title>
+<style>
+:root{--bg:#f7f7f5;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--bd:#e2e2dc;--ac:#2f6fed;--ok:#1f9d55;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ececea;--mut:#9a9a94;--card:#201f1e;--bd:#33322f;--ac:#6b9bff;--ok:#3ec878;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161615;--fg:#ececea;--mut:#9a9a94;--card:#201f1e;--bd:#33322f;--ac:#6b9bff;--ok:#3ec878;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:14px}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .25s}
+.top{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.top b{font-size:26px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+details{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px}
+summary{cursor:pointer;padding:12px 14px;list-style:none}
+summary::-webkit-details-marker{display:none}
+.wt{font-weight:600}
+.pct{color:var(--mut);font-size:13px}
+.body{padding:0 14px 14px}
+.goal{color:var(--mut);margin:0 0 8px;font-size:14px}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:12px 0 4px}
+label{display:flex;gap:8px;align-items:flex-start;padding:3px 0;cursor:pointer}
+label input{margin-top:4px;accent-color:var(--ok)}
+label.on span{color:var(--mut);text-decoration:line-through}
+.meta{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+input[type=number]{width:70px;padding:5px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg)}
+textarea{width:100%;min-height:56px;margin-top:8px;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;box-sizing:border-box}
+button{background:none;border:1px solid var(--bd);color:var(--mut);border-radius:8px;padding:5px 10px;cursor:pointer}
+.note{font-size:13px;color:var(--mut);margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>Agentic AI: 8-week plan & tracker</h1>
+<p class="sub">Goal: be job-ready for the EPAM AI-native developer internship and finish one deployed multi-agent project. LLD/HLD and SQL are tracked separately.</p>
+<div class="top">
+  <div class="row"><span><b id="tp">0%</b> complete</span><span class="pct" id="tc"></span><span class="pct" id="th"></span></div>
+  <div class="bar"><i id="tb"></i></div>
+</div>
+<div id="weeks"></div>
+<p class="note">Progress is saved in this browser on this device only. <button id="rs">Reset all</button></p>
+</main>
+<script>
+const W=[
+{t:"Week 1 · Python for AI + LLM fundamentals",g:"Write production-style Python and talk to an LLM API reliably.",
+L:["Python: type hints, dataclasses, virtualenvs, error handling","asyncio basics (async/await, gather)","Pydantic models and validation","FastAPI basics (routes, request/response models)","pytest basics","Tokens, context windows, temperature and sampling","System / user / assistant messages, prompt engineering","Structured outputs, function and tool calling","Embeddings (what they are, cosine similarity)","How Transformers work (high level, one good explainer)"],
+B:["CLI or FastAPI app that sends a prompt and returns validated JSON (Pydantic) with retry on bad output","Add one tool call (e.g. weather or calculator) the model can invoke"],
+D:"Your app rejects malformed model output and retries; 3+ pytest tests pass."},
+{t:"Week 2 · RAG done properly",g:"Build a PDF Q&A app and measure how good its retrieval is.",
+L:["Document loading and text splitting / chunking trade-offs","Embedding generation, vector DB (Chroma or FAISS)","Similarity search, top-k, metadata filtering","Hybrid search (BM25 + embeddings) and reranking","Short-term vs long-term memory","Citing sources in answers"],
+B:["PDF Q&A app (upload, ask, answer with page citations) behind FastAPI","Eval set: 20 questions with expected answers or pages","Compare two chunk sizes and report retrieval hit-rate"],
+D:"You can show a table: chunk size vs hit-rate on your own eval set."},
+{t:"Week 3 · Agents from scratch + tools",g:"Understand what frameworks hide: the agent loop itself.",
+L:["Agent vs workflow, tool vs agent, LLM call vs agentic system","Agent loop, ReAct, planning and reasoning","Tool schemas, tool execution, error feedback to the model","Autonomous vs deterministic workflows","API integration (web search API)","MCP: what it is and how a server exposes tools"],
+B:["Single research agent in plain Python (no framework): search, read, write report","Give it 3+ tools and a max-steps / max-cost limit","Build one small MCP server with one tool and call it from your agent"],
+D:"Agent finishes a research query end-to-end and stops safely at its step limit."},
+{t:"Week 4 · LangGraph + tracing",g:"Rebuild the agent as a graph with state, branching and human approval.",
+L:["LangChain essentials (models, prompts, tools)","LangGraph: state, nodes, edges, conditional edges","Checkpointing and persistence","Human-in-the-loop (interrupts)","Tracing with LangSmith or Langfuse"],
+B:["Port the Week 3 agent to LangGraph","Add a conditional branch (e.g. needs more research vs ready to write)","Add human approval before a sensitive action (e.g. sending or saving the report)","Turn on tracing and debug one failed run from its trace"],
+D:"You can explain what LangGraph gave you that your plain loop did not."},
+{t:"Week 5 · Evaluation, safety and reliability",g:"Make the single-agent version measurable and safe. This is your baseline.",
+L:["Eval design: test sets, regression checks, LLM-as-judge and its biases","Tool-call correctness and answer quality metrics","Prompt injection (especially from web pages), guardrails, output validation","Cost and token budgeting, timeouts, rate limits","Retries and fallbacks"],
+B:["Eval set of 15-20 research queries for the agent","Measure baseline: quality score, latency, tokens/cost per query","Add an injection test (page with hostile instructions) and defend against it"],
+D:"A saved baseline table you can compare against in Week 7."},
+{t:"Week 6 · Multi-agent design and build",g:"Split into specialist agents only where it plausibly helps.",
+L:["Supervisor, hierarchical, collaborative and sequential patterns","Parallel execution and agent delegation","Shared state vs independent agent memory","Agent communication and handoffs","When a single agent is enough"],
+B:["Supervisor that classifies the task","Research, Analysis and Fact-check agents with their own tools","Report generator node that merges outputs","Run Research and Fact-check steps in parallel where possible"],
+D:"One query runs through all agents and produces a final report."},
+{t:"Week 7 · Harden and compare",g:"Make it robust, then prove (or disprove) that multi-agent is worth it.",
+L:["Failure handling and retry mechanisms per agent","Streaming responses and agent status updates","Persistent storage for runs and conversation memory"],
+B:["Streaming UI or API with live agent status","Tool-call logs and persisted run history","Re-run your Week 5 eval on the multi-agent system","Write a short comparison: quality, latency, cost vs single agent"],
+D:"A comparison table with an honest conclusion, even if single-agent wins on some metric."},
+{t:"Week 8 · Ship and interview prep",g:"Deployed project, clean repo, and clear answers.",
+L:["Docker basics and env/secrets handling","Cloud basics (Azure or AWS fundamentals)","Skim OpenAI Agents SDK, CrewAI and Claude Agent SDK; know why you chose LangGraph","Hugging Face Agents Course: skim for gaps"],
+B:["Dockerize and deploy with a live link","README: architecture diagram, setup, sample runs, eval results","2-minute demo video or GIF","Write answers to: agent vs workflow, tool vs agent, shared vs independent memory, sequential vs parallel, when NOT to use multi-agent"],
+D:"You can demo the project and defend every design choice in 10 minutes."}
+];
+let S={};try{S=JSON.parse(localStorage.getItem("agtrk")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("agtrk",JSON.stringify(S))}catch(e){}};
+const items=i=>{const w=W[i],a=[];w.L.forEach((x,j)=>a.push(["L"+j,x]));w.B.forEach((x,j)=>a.push(["B"+j,x]));a.push(["D",w.D]);return a};
+const el=document.getElementById("weeks");
+function row(i,id,txt){const k="w"+i+id,on=!!S[k];return `<label class="${on?"on":""}"><input type="checkbox" data-k="${k}" ${on?"checked":""}><span>${txt}</span></label>`}
+W.forEach((w,i)=>{
+ const d=document.createElement("details");if(i===0)d.open=true;
+ d.innerHTML=`<summary><div class="row" style="margin:0"><span class="wt">${w.t}</span><span class="pct" id="p${i}"></span></div><div class="bar" style="margin-top:8px"><i id="b${i}"></i></div></summary>
+ <div class="body"><p class="goal">${w.g}</p><h3>Learn</h3>${w.L.map((x,j)=>row(i,"L"+j,x)).join("")}<h3>Build</h3>${w.B.map((x,j)=>row(i,"B"+j,x)).join("")}<h3>Done when</h3>${row(i,"D",w.D)}
+ <div class="meta"><span>Hours spent:</span><input type="number" min="0" step="0.5" data-h="${i}"></div><textarea data-n="${i}" placeholder="Notes, blockers, what to revisit"></textarea></div>`;
+ el.appendChild(d);
+ d.querySelector("[data-h]").value=S["h"+i]||"";
+ d.querySelector("[data-n]").value=S["n"+i]||"";
+});
+function upd(){let tot=0,done=0,hrs=0;
+ W.forEach((w,i)=>{const a=items(i);const c=a.filter(([id])=>S["w"+i+id]).length;tot+=a.length;done+=c;hrs+=parseFloat(S["h"+i])||0;
+  const p=Math.round(c/a.length*100);document.getElementById("p"+i).textContent=c+"/"+a.length+" · "+p+"%";document.getElementById("b"+i).style.width=p+"%"});
+ const p=Math.round(done/tot*100);
+ document.getElementById("tp").textContent=p+"%";document.getElementById("tb").style.width=p+"%";
+ document.getElementById("tc").textContent=done+" of "+tot+" tasks";document.getElementById("th").textContent=hrs+" hrs logged"}
+el.addEventListener("change",e=>{const k=e.target.dataset.k;if(k){S[k]=e.target.checked;e.target.parentElement.classList.toggle("on",e.target.checked);save();upd()}});
+el.addEventListener("input",e=>{const t=e.target;if(t.dataset.h!==undefined){S["h"+t.dataset.h]=t.value}else if(t.dataset.n!==undefined){S["n"+t.dataset.n]=t.value}else return;save();upd()});
+document.getElementById("rs").onclick=()=>{if(confirm("Clear all progress?")){S={};save();location.reload()}};
+upd();
+</script>
+</body>
+</html>
