@@ -111,3 +111,42 @@ class Task:
 2. When do you need `field(default_factory=...)`, and why?
 3. Does a dataclass check types at runtime? What will?
 4. Why is it `default_factory=list` and not `default_factory=list()`?
+
+## Virtual environments
+
+### Concept (my own words)
+A virtual environment (venv) is a private folder with its own Python and its own installed packages for one project. It stops different projects from clashing over package versions and keeps my global Python clean.
+
+### Key points
+- Create once: `python3 -m venv .venv`; activate in every new terminal: `source .venv/bin/activate`
+- Activated means `(.venv)` shows at the start of the terminal line
+- `pip install ...` installs into the active venv only
+- `pip freeze > requirements.txt` saves exact versions; `pip install -r requirements.txt` recreates them anywhere
+- Commit `requirements.txt` and `.gitignore`; never commit `.venv` (large, machine-specific) or `.env` (secrets)
+- One venv at the repo root serves the whole project, not one per day folder
+- `which python` and `which pip` show where installs would go
+
+### Minimal code example
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install mypy
+pip freeze > requirements.txt
+deactivate
+```
+
+### Common mistakes
+- Creating a new venv inside every day folder
+- Saving code files inside `.venv`
+- Running `pip install` without activating the venv (goes to global Python)
+- Forgetting a root `.gitignore`, so `.venv`, `.env` and `.DS_Store` can reach git
+- Forgetting to re-run `pip freeze > requirements.txt` after installing a new package
+
+### My questions and answers
+- Why commit `requirements.txt` but not `.venv`? It is a small list of what to install, so anyone can rebuild the same environment; the `.venv` folder itself is huge and specific to my machine.
+- What if I `pip install` with no venv active? The package goes into global Python, not my project, so the project can't find it and global Python gets cluttered.
+
+### Recall questions (answer without looking, one week later)
+1. What does `(.venv)` at the start of the terminal line tell me?
+2. What two files do I commit so others can recreate my setup, and what do I never commit?
+3. How can I check where `pip install` would put a package?
