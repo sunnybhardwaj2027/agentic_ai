@@ -150,3 +150,53 @@ deactivate
 1. What does `(.venv)` at the start of the terminal line tell me?
 2. What two files do I commit so others can recreate my setup, and what do I never commit?
 3. How can I check where `pip install` would put a package?
+
+
+## Error handling
+
+### Concept (my own words)
+When Python cannot do something it raises an exception and the program crashes unless I handle it. `try` holds the risky line, `except` handles one specific error, and the program carries on. This matters for AI work because LLM replies can be broken JSON and API calls fail, so "try, catch, retry" is the base of a reliable app.
+
+### Key points
+- If a line in `try` fails, the rest of the `try` block is skipped and Python jumps to the matching `except`
+- `except ValueError as e` stores the error in `e` so I can print the reason
+- `else` runs only if there was no error; `finally` always runs (cleanup)
+- `raise ValueError("message")` creates my own error for the right type with a bad value (like age -5)
+- `return None` vs `raise`: returning a fallback lets the caller ignore the problem; raising forces the caller to deal with it
+- Common errors: `ValueError`, `TypeError`, `KeyError`, `FileNotFoundError`, `ZeroDivisionError`, `json.JSONDecodeError`, `NameError`
+- A `return` inside a loop ends the whole function, so a "give up" `return` belongs after the loop
+
+### Why a bare `except:` is bad
+`except ValueError` says "I expect this one problem and know how to handle it." A bare `except:` (or `except Exception:`) treats every error as that one, so real bugs get hidden. In `bare_except_demo.py`, a typo (`txt` instead of `text`) raised a `NameError`, the bare `except` caught it, and the program printed "not a number" for the valid input `"21"`. With `except ValueError` the typo crashed loudly and the traceback showed the exact line. In a retry loop a bare `except` would also retry on my own coding bugs or an expired API key.
+
+### Minimal code example
+```python
+import json
+
+def get_with_retry(attempts: list[str], max_tries: int = 3) -> dict | None:
+    for i in range(max_tries):
+        if i >= len(attempts):
+            return None
+        try:
+            return json.loads(attempts[i])
+        except json.JSONDecodeError:
+            print(f"Attempt {i + 1} failed")
+    return None
+```
+
+### Common mistakes
+- Putting `return None` inside the loop, so the function quits after the first failed attempt
+- Using a bare `except:` or `except Exception:`
+- Putting my own validation `raise` inside the `try`, so my own `except ValueError` catches it and prints the wrong message
+- Wrapping many lines in `try` instead of only the risky one
+- Leaving `as e` when I never use `e`
+
+### My questions and answers
+- Why is `if age < 0` outside the `try` in `parse_age`? `-5` is a valid integer, so `int()` succeeds. The negative check is a different problem. Inside the `try`, my own `ValueError` would be caught by `except ValueError` and print "not a number", which is the wrong message.
+- Why did `parse_age_bad("21")` print "not a number"? The typo raised a `NameError`, which the bare `except` caught and hid.
+
+### Recall questions (answer without looking, one week later)
+1. If line 1 inside `try` fails, does line 2 inside `try` run? Where does Python jump?
+2. What is the difference between `return None` in an `except` and `raise ValueError(...)`?
+3. Why can a bare `except:` hide a real bug? Give an example.
+4. Why does a `return None` placed inside a `for` loop break a retry function?
